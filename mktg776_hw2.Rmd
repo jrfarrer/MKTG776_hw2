@@ -1,0 +1,444 @@
+---
+title: "MKTG776 HW2"
+author: "Jordan Farrer"
+date: '2017-01-31'
+output: function(...) {
+
+          fmt <- rmarkdown::pdf_document(toc = TRUE, number_section = TRUE, df_print = 'kable',...)
+        
+          fmt$knitr$knit_hooks$size = function(before, options, envir) {
+            if (before) return(paste0("\n \\", options$size, "\n\n"))
+            else return("\n\n \\normalsize \n")
+          }
+        
+          return(fmt)
+        }
+
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = 'center', size = 'small')
+```
+
+# Question 1
+
+## PMF of Negative Binomial Distribution for Period $t$
+
+Given the Poisson distribution with rate parameter $\lambda t$,
+
+\begin{equation}
+\ P(X(t) = t|\lambda) = \frac{(\lambda t)^x e^{-\lambda t}}{x!}
+\end{equation}
+
+and Gamma distribution with shape parameter $r$ and scale parameter $\alpha$, 
+
+\begin{equation}
+\ g(\lambda) = \frac{\alpha^r \lambda^{r-1}e^{-\alpha \lambda}}{\Gamma(r)}
+\end{equation}
+
+where $\Gamma(r)$ is the gamma function. Now define
+
+\begin{align}
+\ P(X(t) = x) & = \int_0^\infty P(X(t) = t|\lambda) g(\lambda) d\lambda \\
+ & = \frac{(\lambda t)^x e^{-\lambda t}}{x!} \frac{\alpha^r \lambda^{r-1}e^{-\alpha \lambda}}{\Gamma(r)} d\lambda \\
+ & = \frac{\alpha^r t^x}{x!\Gamma(r)} \int_0^\infty \lambda^{r+x-1}e^{-\lambda(\alpha + t)} d\lambda \\
+\end{align}
+
+We note that this distribution looks similar to the gamma distribution with shape parameter $r+x$ and scale parameter $\alpha + t$,
+
+\begin{equation}
+\ g(\lambda|r+x, \alpha +t) = \frac{(\alpha+t)^{r+x} \lambda^{r+x-1}e^{-\lambda(\alpha +t)}}{\Gamma(r+x)}
+\end{equation}
+
+We multiply the right-hand side of the integral by $\frac{(\alpha+t)^{r+x}}{\Gamma(r+x)}$ and the left-hand side of the integral by the inverse to get
+
+\begin{align}
+\ & = \frac{\alpha^r t^x \Gamma(r+x)}{x!\Gamma(r)(\alpha+t)^{r+x}} \int_0^\infty \frac{(\alpha+t)^{r+x}\lambda^{r+x-1}e^{-\lambda(\alpha + t)}}{\Gamma(r+x)} d\lambda \\
+\end{align}
+
+We see that the integral over all values of $\lambda$ means the value of the integral is 1 by the definition of probability distributions. Thus we are left with
+
+\begin{align}
+\ & = \frac{\alpha^r t^x \Gamma(r+x)}{x!\Gamma(r)(\alpha+t)^{r+x}}  \\
+\ & = \frac{\Gamma(r+x)}{x!\Gamma(r)}\frac{\alpha^r t^x}{(\alpha+t)^{r+x}}  \\
+\ & = \frac{\Gamma(r+x)}{\Gamma(r)x!}\frac{\alpha^r t^x}{(\alpha+t)^r(\alpha+t)^x}  \\
+\ & = \bigg(\frac{\Gamma(r+x)}{\Gamma(r)x!}\bigg)\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^x  \label{p_xt}
+\end{align}
+
+## Forward Recursion Formula
+
+We start by finding $P(X(t) = 0)$ using \ref{p_xt},
+
+\begin{align}
+\ P(X(t) = 0) & = \bigg(\frac{\Gamma(r+0)}{\Gamma(r) 0!}\bigg)\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^0 \\
+ & = \bigg(\frac{\Gamma(r)}{\Gamma(r)}\bigg)\bigg(\frac{\alpha}{\alpha+t}\bigg)^r \\
+ & = \bigg(\frac{\alpha}{\alpha+t}\bigg)^r \\
+\end{align}
+
+Then we need to simplify
+
+\begin{align}
+\ \frac{P(X(t) = x)}{P(X(t) = x -1)} & = \frac{\bigg(\frac{\Gamma(r+x)}{\Gamma(r)x!}\bigg)\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^x} {\bigg(\frac{\Gamma(r+x-1)}{\Gamma(r)(x-1)!}\bigg)\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^{x-1}} \\ 
+ & = \bigg(\frac{r +x-1}{x}\bigg) \bigg(\frac{t}{\alpha + t}\bigg) \\
+ & = \frac{t(r+x-1)}{x(\alpha + t)} \\
+\end{align}
+
+Thus the forward-recursion formula is
+
+\begin{equation}
+P(X(t)=x) = 
+\begin{cases}
+\big(\frac{\alpha}{\alpha+t}\big)^r & x = 0\\
+\frac{t(r+x-1)}{x(\alpha + t)}P(X(t) = x - 1) & x = 1,2,3,...\\
+\end{cases}
+\end{equation}
+
+
+## Mean of Negative Binomial Distribution for period $t$
+
+We will use the following relations:
+
+\begin{equation}
+\ \Gamma(x) = (x-1)!
+\end{equation}
+
+\begin{equation}
+\ C^{n}_{k} = \binom{n}{k} =  \frac{n!}{k!(n-k)!}
+\end{equation}
+
+By the definition of a probability distribution's expectation, 
+
+\begin{align}
+\ E[X(t)] & = \sum_{x=0}^\infty x \bigg(\frac{\Gamma(r+x)}{\Gamma(r)x!}\bigg)\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^x \\
+ & = \sum_{x=0}^\infty x \frac{(r+x-1)!}{(r-1)!x!}\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^x \\
+ & = \sum_{x=1}^\infty \frac{(r+x-1)!}{(r-1)!(x-1)!}\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^x \label{negative_factorial}
+\end{align}
+
+We changed the range of the summation in (\ref{negative_factorial}) above because $x$ is defined for $x>=0$ and there cannot be negative factorials. Now, we can multiple by $\frac{r}{r}$,
+
+\begin{align}
+\ & = \sum_{x=1}^\infty \frac{r(r+x-1)!}{r!(x-1)!}\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^x \\
+  & = \sum_{x=1}^\infty r \binom{r+x-1}{x-1}\bigg(\frac{\alpha}{\alpha+t}\bigg)^r\bigg(\frac{t}{\alpha+t}\bigg)^x
+\end{align}
+
+Now, we separate the last two expressions in parentheses and move them outside the summation as they are not expressions of $x$, 
+
+\begin{align}
+\ & = \sum_{x=1}^\infty r \binom{r+x-1}{x-1}\bigg(\frac{\alpha}{\alpha+t}\bigg)^{r+1}\bigg(\frac{\alpha}{\alpha+t}\bigg)^{-1}\bigg(\frac{t}{\alpha+t}\bigg)^{x-1}\bigg(\frac{t}{\alpha+t}\bigg) \\
+  & = r \bigg(\frac{\alpha}{\alpha+t}\bigg)^{-1}\bigg(\frac{t}{\alpha+t}\bigg) \sum_{x=1}^\infty \binom{r+x-1}{x-1} \bigg(\frac{\alpha}{\alpha+t}\bigg)^{r+1}\bigg(\frac{t}{\alpha+t}\bigg)^{x-1} \\
+  & = r \bigg(\frac{\alpha+t}{\alpha+t}\bigg)\bigg(\frac{t}{\alpha+t}\bigg) \sum_{x=1}^\infty \binom{r+x-1}{x-1}
+  \bigg(\frac{\alpha}{\alpha+t}\bigg)^{r+1}\bigg(\frac{t}{\alpha+t}\bigg)^{x-1} \\
+    & = \frac{rt}{\alpha} \sum_{x=1}^\infty \binom{r+x-1}{x-1} \bigg(\frac{\alpha}{\alpha+t}\bigg)^{r+1}\bigg(\frac{t}{\alpha+t}\bigg)^{x-1}
+\end{align}
+
+Now we can use a change of variable $x = 1 + z$, to get
+
+\begin{align}
+\ & = \frac{rt}{\alpha} \sum_{z=0}^\infty \binom{r+1+z-1}{z} \bigg(\frac{\alpha}{\alpha+t}\bigg)^{r+1}\bigg(\frac{t}{\alpha+t}\bigg)^{z} \label{almost_there}
+\end{align}
+
+We can do a change of variable again such that $y = r +1$, to write (\ref{almost_there}) as 
+
+\begin{align}
+\ & = \frac{rt}{\alpha} \sum_{z=0}^\infty \binom{y+z-1}{z} \bigg(\frac{\alpha}{\alpha+t}\bigg)^{y}\bigg(\frac{t}{\alpha+t}\bigg)^{z} \\
+\ & = \frac{rt}{\alpha} \sum_{z=0}^\infty \frac{(y+z-1)!}{z!(y-1)!} \bigg(\frac{\alpha}{\alpha+t}\bigg)^{y}\bigg(\frac{t}{\alpha+t}\bigg)^{z} \\
+\ & = \frac{rt}{\alpha} \sum_{z=0}^\infty \frac{\Gamma(y+z)}{\Gamma(y)z!} \bigg(\frac{\alpha}{\alpha+t}\bigg)^{y}\bigg(\frac{t}{\alpha+t}\bigg)^{z} \label{there}
+\end{align}
+
+We see that summation in (\ref{there}) is simply the negative binomial distribution where $x$ in (\label{p_xt}) is $z$ and the shape parameter $r$ is $y$. As it is the summation over all possible values of $z$, this becomes 1. Thus, 
+
+\begin{align}
+\ E[X(t)] & = \frac{rt}{\alpha}
+\end{align}
+
+Resource used in the preceding derivation: [http://www.math.ntu.edu.tw/~hchen/teaching/StatInference/notes/lecture16.pdf](http://www.math.ntu.edu.tw/~hchen/teaching/StatInference/notes/lecture16.pdf)
+
+# Question 2
+
+We first load the provided customer data. Below are the first 10 records:
+
+```{r}
+pacman::p_load(tidyverse, forcats, pander)
+panderOptions('round', 2)
+panderOptions('keep.trailing.zeros', TRUE)
+options(scipen = 10)
+
+customer_data <- 
+  readxl::read_excel("khakichinos HW data.xlsx", skip = 1,
+            col_names = c("id", "visits", "Empty", "income", "sex", "age","size", "NA1", "NA2")) %>%
+  select(id, visits)
+
+customer_data %>%
+  head(10)
+```
+
+Next we define functions that implement the (zero-inflated) Poisson and (zero-inflated) NBD. Using these, we estimate the parameters of each model:
+
+```{r eval = TRUE}
+# For Zero-inflated Poisson, calculates P(X=x)
+fn_zip <- function(x, lambda, pi) {
+  p_x <- (lambda^x * exp(-lambda)) / factorial(x)
+  if(x == 0) {
+    return(pi + (1 - pi) * p_x)  
+  } else {
+    return((1 - pi) * p_x)  
+  }
+}
+
+# For Zero-inflated Negative Binomial Distribution, calculates P(X=x)
+fn_zinbd <- function(x, r, alpha, pi) {
+  p_x <- (gamma(r + x) / (gamma(r) * factorial(x))) * (alpha / (alpha + 1))^r * (1 / (alpha + 1))^x
+  if(x == 0) {
+    return(pi + (1 - pi) * p_x)  
+  } else {
+    return((1 - pi) * p_x)  
+  }
+}
+
+# Calculates the log-likelihood of given a type of model
+# either poisson or nbd and whether or not it's zero-inflated
+# given a vector of number of visits per individual
+fn_max_ll <- function(par, model = c('poisson', 'nbd'), zero_inflated = FALSE, visits) {
+  
+  if (model == 'poisson') {
+    lambda <- par[1]
+    if (zero_inflated) {
+      pi <- par[2]
+    } else {
+      pi <- 0
+    }
+    ll <- sum(log(sapply(visits, fn_zip, lambda, pi)))
+  } else {
+    r <- par[1]
+    alpha <- par[2]
+    if (zero_inflated) {
+      pi <- par[3]
+    } else {
+      pi <- 0
+    }
+    ll <- sum(log(sapply(visits, fn_zinbd, r, alpha, pi)))
+  }
+
+  return(-ll)
+}
+
+params1 <- nlminb(c(1), fn_max_ll, lower = c(0), upper = c(Inf), 
+                 model = 'poisson', zero_inflated = FALSE, visits = customer_data$visits)
+
+params2 <- nlminb(c(1, .5), fn_max_ll, lower = c(0, 0), upper = c(Inf, 1), 
+                 model = 'poisson', zero_inflated = TRUE, visits = customer_data$visits)
+
+params3 <- nlminb(c(1, 1), fn_max_ll, lower = c(0, 0), upper = c(Inf, Inf), 
+                 model = 'nbd', zero_inflated = FALSE, visits = customer_data$visits)
+
+params4 <- nlminb(c(1, 1, .5), fn_max_ll, lower = c(0, 0, 0), upper = c(Inf, Inf, 1), 
+                 model = 'nbd', zero_inflated = TRUE, visits = customer_data$visits)
+
+
+data_frame(
+  model = c('Poisson', "Zero-Inflated Poisson",'NBD',"Zero-Inflated NBD")
+  , lamdba = c(params1$par[1], params2$par[1], NA, NA)
+  , r = c(NA, NA, params3$par[1], params4$par[1])
+  , alpha = c(NA, NA, params3$par[2], params4$par[2])
+  , pi = c(NA, params2$par[2], NA, params4$par[3])
+  ) %>%
+  pander(missing = "")
+```
+
+We see that $\pi = 0$ for the Zero-Inflated NBD and thus we are left with just the NBD. We can visualize the results for all number of visits:
+
+```{r, eval = TRUE}
+results <- 
+  customer_data %>%
+    group_by(visits) %>%
+    summarise(
+      Actual = n()
+    ) %>% 
+    ungroup() %>%
+    mutate(
+       Total = sum(Actual)
+    ) %>% 
+    mutate(
+      `Poisson` = sapply(visits, fn_zip, params1$par[1], 0) * Total
+      , `Zero-Inflated Poisson` = sapply(visits, fn_zip, params2$par[1], params2$par[2]) * Total
+      , `NBD` = sapply(visits, fn_zinbd, params3$par[1], params3$par[2], 0) * Total
+      , `Zero-Inflated NBD` = sapply(visits, fn_zinbd, params4$par[1], 
+                                     params4$par[2], params4$par[3]) * Total
+    ) %>%
+    gather(Type, Customers, -visits, -Total) %>%
+    mutate(Type = factor(Type, levels = c('Actual', 'Poisson', 
+                                          "Zero-Inflated Poisson",'NBD',"Zero-Inflated NBD")))
+
+ggplot() +   
+  geom_bar(data = results %>% filter(Type == "Actual"), 
+           aes(x = visits, y = Customers), stat = 'identity') +
+  geom_line(data = results %>% filter(Type != "Actual"), 
+            aes(x = visits, y = Customers, colour = Type)) +
+   scale_x_continuous(breaks = scales::pretty_breaks()) +
+  labs(colour = "Model", x = "Visits", y = "Customers", title = "Models with Actuals", 
+       caption = paste0("Note: The NBD and Zero-Inflated NBD are the same ",
+                        "model as pi = 0 in the zero-inflated model"))
+```
+
+There is a long right tail, so we focus in on just the first 0-10 visits:
+
+```{r}
+ggplot() +   
+  geom_bar(data = results %>% filter(Type == "Actual"), aes(x = visits, y = Customers), stat = 'identity') +
+  geom_line(data = results %>% filter(Type != "Actual"), aes(x = visits, y = Customers, colour = Type)) +
+  scale_x_continuous(limits = c(NA, 10), breaks = scales::pretty_breaks()) +
+  labs(colour = "Model", x = "Visits", y = "Customers", title = "Zoom in on 0-10 Visits", 
+       caption = "Note: The NBD and Zero-Inflated NBD are the same model as pi = 0 in the zero-inflated model")
+```
+
+Finally, we compute the $\chi^2$ statistics and then the $p$-values. As evidenced by the charts above, we have no evidence that the data came from our calculated models.
+
+```{r results = 'asis'}
+results %>%
+  spread(Type, Customers) %>%
+  gather(model, expected, -visits, -Total, -Actual) %>%
+  mutate(chi.squared = (Actual - expected)^2 / expected) %>%
+  group_by(model) %>%
+  summarise(chi.squared = sum(chi.squared)) %>%
+  inner_join(
+    data_frame(
+      model = c('Poisson', "Zero-Inflated Poisson",'NBD',"Zero-Inflated NBD")
+      , df = c(1,2,2,3)
+    )
+    , by = c('model')
+  ) %>%
+  mutate(p.value = pchisq(chi.squared,df=df,lower.tail=FALSE)) %>%
+  pander()
+```
+
+
+# Question 3
+
+Based on the examination of the dataset in [Bickart & Schmittlein, 1999](https://www.jstor.org/stable/3152100?seq=5#page_scan_tab_contents), we transform the category **3-5** to the integer **4**. We use write a recursive function to calculate NBD and a function to zero-inflate NBD as necessary. We estimate the model parameters and report the results below: 
+
+```{r results = 'asis'}
+survey_data <- 
+  data_frame(
+    surveys = c("0", "1", "2", "3-5", "6+")
+    , surveys_int = c(0, 1, 2, 4, 6)
+    , respondents = c(1020, 166, 270, 279, 130)
+  )
+  
+#  A recursive function that calculates NBD model
+# for a given x, r, and alpha (aggregated data)
+fn_nbd_recursive <- function(x, r, alpha) {
+  if(x == 0) {
+    p_x <- (alpha / (alpha + 1))^r
+    return(p_x)
+  } else {
+    p_x <- fn_nbd_recursive(x-1, r, alpha) * ((r+x-1)/(x*(alpha+1)))
+    return(p_x)
+  }
+}
+
+# Performs zero-inflation on P(X = x) values provided
+# you give x and pi (inflated factor)
+fn_zero_inflate <- function(p_x, x, pi) {
+    if(x == 0) {
+    return(pi + (1 - pi) * p_x)  
+  } else {
+    return((1 - pi) * p_x)  
+  }
+}
+
+# Calculates the MLE for a NBD model with aggregated data
+fn_max_ll_nbd <- function(par, zero_inflated = FALSE, surveys, count) {
+
+  r <- par[1]
+  alpha <- par[2]
+  if (zero_inflated) {
+    pi <- par[3]
+  } else {
+    pi <- 0
+  }
+  
+  nbd <- map_dbl(surveys, .f = fn_nbd_recursive, r, alpha)
+  zi <- map2_dbl(nbd, surveys, .f = fn_zero_inflate, pi)
+  all <- c(zi, fn_zero_inflate(1 - sum(zi), -1, pi))
+  ll <- sum(log(all) * count)
+  
+  return(-ll)
+}
+
+
+# Identify r and alpha for NBD model
+survey_params <- nlminb(c(1,1), fn_max_ll_nbd, lower = c(0, 0), upper = c(Inf, Inf), 
+                 zero_inflated = FALSE, surveys = c(0, 1, 2, 4), count = survey_data$respondents)
+
+# Identify r, alpha, and pi for ZI-NBD model
+survey_params_zi <- nlminb(c(1,1,.5), fn_max_ll_nbd, lower = c(0,0,0), upper = c(Inf, Inf, 1), 
+                 zero_inflated = TRUE, surveys = c(0, 1, 2, 4), count = survey_data$respondents)
+
+data_frame(
+  model = c("NBD", 'Zero-Inflated NBD')
+  , r = c(survey_params$par[1], survey_params_zi$par[1])
+  , alpha = c(survey_params$par[2], survey_params_zi$par[2])
+  , pi = c(NA, survey_params_zi$par[3])
+) %>%
+  pander(missing = "")
+```
+
+Next we plot the results, noting that the zero-inflated NBD does well except for the category **3-5**. 
+
+```{r}
+# Calculates the expected number of respondents
+# given r, alpha, and pi and the number of 
+# surveys
+fn_calc_expectation <- function(surveys, r, alpha, pi) {
+  nbd <- map_dbl(surveys, .f = fn_nbd_recursive, r, alpha)
+  zi <- map2_dbl(nbd, surveys, .f = fn_zero_inflate, pi)
+  all <- c(zi, fn_zero_inflate(1 - sum(zi), -1, pi))
+  return(all)
+}
+
+# From the survey data calculate expected number of respondents for each type of 
+# model
+results_q3 <- 
+  survey_data %>%
+    mutate(
+      total = sum(respondents)
+      , `NBD` = fn_calc_expectation(c(0, 1, 2, 4), 
+              survey_params$par[1], survey_params$par[2], 0) * total
+      , `Zero-Inflated NBD` = fn_calc_expectation(c(0, 1, 2, 4), 
+              survey_params_zi$par[1], survey_params_zi$par[2], survey_params_zi$par[3]) * total
+      )
+
+
+results_q3 %>% 
+  select(-surveys_int, -total) %>%
+  gather(model, value, -surveys) %>%
+  mutate(model = ifelse(model == "respondents", "Actual", model)) %>%
+  mutate(model = factor(model, levels = c("Actual","NBD", 'Zero-Inflated NBD'))) %>%
+  ggplot(aes(x = surveys, y = value, fill = model)) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  labs(x = "Surveys", y = "Respondents", fill = "Model", 
+       title = "Models for Survey Data")
+
+```
+
+Finally, we see that though there is improvement in the $\chi^2$ statistic for the zero-inflated model, we have no evidence that the data came from either of the models we implemented.
+
+```{r results = 'asis'}
+results_q3 %>%
+  select(-surveys_int, -total) %>%
+  gather(model, expected, -surveys, -respondents) %>%
+  rename(Actual = respondents) %>%
+  mutate(chi.squared = (Actual - expected)^2 / expected) %>%
+  group_by(model) %>%
+  summarise(chi.squared = sum(chi.squared)) %>%
+  inner_join(
+    data_frame(
+      model = c('NBD',"Zero-Inflated NBD")
+      , df = c(2, 3)
+    )
+    , by = c('model')
+  ) %>%
+  mutate(p.value = pchisq(chi.squared,df=df,lower.tail=FALSE)) %>%
+  pander()
+```
+
